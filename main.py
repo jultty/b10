@@ -1,40 +1,83 @@
 import flet as ft
 
-
-class MyButton(ft.ElevatedButton):
-    def __init__(self, text):
-        super().__init__()
-        self.bgcolor = ft.colors.ORANGE_300
-        self.color = ft.colors.GREEN_800
-        self.text = text
+positions = [1, 2, 4, 8, 16, 32, 64, 128]
 
 def main(page: ft.Page):
+    input = ft.Ref[ft.TextField]()
+    output = ft.Ref[ft.Text]()
+    history = []
 
-    # say hello input
-    def btn_click(e):
-      if not txt_name.value:
-        txt_name.error_text = "Please enter your name"
+    def handleClear(_):
+        history.clear()
+        input.current.label = "Input"
+        input.current.value = ""
+        input.current.disabled = False
+        input.current.focus()
         page.update()
-      else:
-        name = txt_name.value
-        page.clean()
-        page.add(ft.Text(f"Hello, {name}!"))
 
-    txt_name = ft.TextField(label="Your name")
-    page.add(txt_name, ft.ElevatedButton("Say hello!", on_click=btn_click))
-
-    # click me button
-    btn = ft.ElevatedButton("Click me")
-    page.add(ft.SafeArea(ft.Text("Hello, Flet!")))
-    page.add(btn)
-
-    def checkbox_changed(e):
-        output_text.value = f"You have learned how to ski: {todo_check.value}"
+    def handleCalculate(_):
+        history.append(
+            ft.Container(content = ft.Row(controls=[
+                ft.Text(input.current.value)
+            ])
+        ))
+        input.current.value = ""
+        input.current.focus()
         page.update()
-    output_text = ft.Text()
-    todo_check = ft.Checkbox(label="Todo: Learn how to ski", value=False, on_change=checkbox_changed)
-    page.add(todo_check, output_text)
 
-    page.add(MyButton(text="Custom Button"), MyButton(text="Another custom button"))
+    def handleChange(event):
+        output.current.value = event.control.value
+        page.update()
+
+    class CustomButton(ft.ElevatedButton):
+        def __init__(self, text, icon, on_click):
+            super().__init__()
+            self.bgcolor = ft.colors.GREEN_500
+            self.color = ft.colors.WHITE
+            self.text = text
+            self.icon = icon
+            self.on_click = on_click
+
+    button_send = CustomButton("Convert", ft.icons.CALCULATE, handleCalculate)
+    button_clear = CustomButton("Clear", ft.icons.CLEAR, handleClear)
+
+    buttons = [ button_send, button_clear, ]
+
+    def makeSquare(number: int):
+        return ft.Container(content = ft.Column(controls=[
+            ft.Row([ft.Text(str(number))],
+                   alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row([ft.Checkbox()],
+                   alignment=ft.MainAxisAlignment.CENTER),
+        ], alignment=ft.MainAxisAlignment.CENTER, width=40 ))
+
+
+    def makeSquares():
+        squares = []
+
+        for position in positions:
+            squares.append(makeSquare(position))
+
+        return squares
+
+    page.add(
+        ft.Text(ref=output, text_align = ft.TextAlign.CENTER, width = page.width),
+        #ft.Container(ref=tasks_container, content = ft.Column(controls=history)),
+        ft.TextField(
+            ref=input,
+            label="",
+            autofocus=True,
+            autocorrect = False,
+            enable_suggestions = False,
+            text_align = ft.TextAlign.CENTER,
+            input_filter = ft.NumbersOnlyInputFilter(),
+            on_submit=handleCalculate,
+            on_change=handleChange), # pyright: ignore reportArgumentType
+        ft.Container(content = ft.Row(controls=buttons)), # pyright: ignore reportArgumentType
+
+        ft.Container(content = ft.Row(controls=makeSquares(),
+          alignment=ft.MainAxisAlignment.CENTER, width=page.width),
+                                      margin = ft.Margin(0, 40, 0, 0))
+    )
 
 ft.app(main)

@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "b10"
+version = "0.1.0"
+description = ""
+authors = ["Juno Takano <juno.takano@aluno.ifsp.edu.br>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flet = "^0.23.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
